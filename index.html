@@ -46,8 +46,25 @@
 
 <section class="card">
   <h2>每日盈亏热力图</h2>
-  <p class="hint">绿=止盈 +$3,000 · 红=止损 -$5,000 · 灰=日终自然停止。鼠标悬停查看详情。</p>
+  <p class="hint">绿=止盈 +$3,000 · 红=止损 -$5,000 · 灰=日终自然停止。<b>点击任一天查看完整开奖 + 逐笔下注流水</b>。</p>
+  <div class="year-picker-wrap" id="year-picker-wrap">
+    <label>年份: <select id="year-select"></select></label>
+  </div>
   <div id="heatmap"></div>
+</section>
+
+<section class="card" id="day-detail" style="display:none">
+  <div class="day-detail-head">
+    <h2 id="day-detail-title">📅 当日明细</h2>
+    <button id="day-detail-close" onclick="closeDayDetail()">✕ 关闭</button>
+  </div>
+  <div id="day-detail-summary" class="day-summary"></div>
+  <div class="day-detail-tabs">
+    <button class="tab-btn active" data-tab="bets">逐笔下注 (<span id="bets-count">0</span>)</button>
+    <button class="tab-btn" data-tab="draws">完整开奖 (<span id="draws-count">0</span>)</button>
+    <button class="tab-btn" data-tab="triggers">触发记录 (<span id="trig-count">0</span>)</button>
+  </div>
+  <div id="day-detail-body"></div>
 </section>
 
 <section class="card">
