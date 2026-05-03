@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>极速赛车 多车道追号 回测</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>极速赛车 · 多车道追号策略 回测</h1>
+  <p class="subtitle">2023-01-01 → 2026-05-03 · 1,404,059 期真实数据 · 1,219 天 · 每日独立 $10,000 本金</p>
+</header>
+
+<section class="card">
+  <h2>策略规则</h2>
+  <ul class="rules">
+    <li><b>10 车道独立监听</b>：第 1-10 名各自一条独立追号通道，互不干扰</li>
+    <li><b>触发条件</b>：任一车道 <em>连续 2 期</em> 开出同一号码 → 触发该车道追该号</li>
+    <li><b>注码</b>：$1 起步整数下注；输了按 <code>ceil((5 + 累计亏损) / 8.98)</code> 递增；目标利润 ≥ $5/chase（实际中奖 $9-15）</li>
+    <li><b>追号上限</b>：单条 chase 最多 65 期，65 期不中 → chase 失败（已亏损）</li>
+    <li><b>命中重启</b>：中了立即按 $1 重新追同号同车道</li>
+    <li><b>多 chase 并行</b>：10 条车道独立运行，可同时追多条</li>
+    <li><b>每日重置</b>：8:00 重置一切，本金 $10,000，止盈 +$3,000 / 止损 -$5,000</li>
+    <li><b>无 22 点强停</b>：当日已触发的 chase 跑完为止，直到自然结束或命中止盈/止损</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2>核心成绩 (3.3 年累计)</h2>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">累计盈亏</div><div class="kpi-value pos" id="kpi-total"></div><div class="kpi-sub">每天独立 $10K 本金</div></div>
+    <div class="kpi"><div class="kpi-label">日均盈亏</div><div class="kpi-value pos" id="kpi-avg"></div><div class="kpi-sub">本金的 0.30%/天</div></div>
+    <div class="kpi"><div class="kpi-label">盈利天数</div><div class="kpi-value" id="kpi-winrate"></div><div class="kpi-sub" id="kpi-winsub"></div></div>
+    <div class="kpi"><div class="kpi-label">爆仓天数</div><div class="kpi-value pos" id="kpi-bust"></div><div class="kpi-sub">已被 $5K 止损接住</div></div>
+    <div class="kpi"><div class="kpi-label">止盈/止损比</div><div class="kpi-value" id="kpi-tpsl"></div><div class="kpi-sub" id="kpi-tpsl-sub"></div></div>
+    <div class="kpi"><div class="kpi-label">最差/最好单日</div><div class="kpi-value" id="kpi-extreme"></div><div class="kpi-sub">尾部全部被止损约束</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>累计资金曲线</h2>
+  <p class="hint">假设逐日复投 (起始 $10,000，每天净盈亏累加)。坐标轴单位为美元。</p>
+  <div class="chart-wrap"><canvas id="equity-chart"></canvas></div>
+</section>
+
+<section class="card">
+  <h2>每日盈亏热力图</h2>
+  <p class="hint">绿=止盈 +$3,000 · 红=止损 -$5,000 · 灰=日终自然停止。鼠标悬停查看详情。</p>
+  <div id="heatmap"></div>
+</section>
+
+<section class="card">
+  <h2>月度统计</h2>
+  <div class="table-wrap">
+    <table id="month-table">
+      <thead><tr><th>月份</th><th>天数</th><th>累计盈亏</th><th>日均</th><th>胜率</th><th>止盈</th><th>止损</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>止盈/止损 网格搜索</h2>
+  <p class="hint">在 (TP, SL) 5×7 网格扫描，颜色表示 3.3 年累计盈亏（绿=正、红=负）。最优 <b>TP=$3,000 / SL=$5,000</b> 周围是稳定正收益区。</p>
+  <div id="grid-table"></div>
+</section>
+
+<section class="card">
+  <h2>关键洞察</h2>
+  <ol class="insight">
+    <li><b>追号本身是 0 期望博弈。</b> 不加止损时，3.3 年累计仅 $+4,085（日均 +$3.35），21.9% 的日子爆仓 -$10,000，把 78% 止盈日的利润全吃掉。</li>
+    <li><b>$5,000 止损是关键。</b> 当连续 65 期不中时单日最大损失会达 -$10,000；用 $5,000 提前砍仓，把尾部从 -$10K 收紧到 -$5,935，期望值瞬间从 0 翻正。</li>
+    <li><b>$3,000 止盈不要贪。</b> 止盈调高到 $5,000 时，止盈率从 64% 跌到 49%，止损天暴增到 50%，期望反而变负。</li>
+    <li><b>不存在"稳赚"。</b> 1,219 天里仍有 441 天 (36%) 触发止损，亏损天和盈利天比是 3:5。月度统计有 6/12 月负收益，需要长期心态稳定。</li>
+    <li><b>本金占用大。</b> $10K 本金、3.3 年赚 $36K，年化约 11K = 11%，这还没扣运营摩擦（注单上限、限红、多 chase 同步并行）。</li>
+  </ol>
+</section>
+
+<footer>
+  <p>数据源: 1689567.com 极速赛车 lotCode=10037 · 模拟器: <code>jisu_simulator.py</code> · 仅供分析研究</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
