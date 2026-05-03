@@ -3,7 +3,7 @@ const fmt2 = n => (n >= 0 ? "+" : "") + n.toLocaleString("en-US", { minimumFract
 const fmtMoney = n => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 let DATA = null;
-let monthCache = {};
+let dayCache = {};
 let currentDay = null;
 let currentTab = "bets";
 
@@ -260,46 +260,54 @@ async function openDay(date) {
   const detail = document.getElementById("day-detail");
   detail.style.display = "block";
   detail.scrollIntoView({ behavior: "smooth", block: "start" });
-  document.getElementById("day-detail-title").textContent = `📅 ${date} 全日明细`;
-  document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载中… (按月加载, 首次约 4MB)</p>`;
+  document.getElementById("day-detail-title").textContent = `📅 ${date} 当日汇总`;
 
-  const ym = date.slice(0, 7);
-  if (!monthCache[ym]) {
+  // Always show summary from results.json
+  const dayMeta = DATA.daily.find(d => d.date === date);
+  if (!dayMeta) {
+    document.getElementById("day-detail-body").innerHTML = `<p class="hint">该日无数据</p>`;
+    document.getElementById("day-detail-summary").innerHTML = "";
+    return;
+  }
+  const pnlClr = dayMeta.pnl >= 0 ? "#3fb950" : "#f85149";
+  document.getElementById("day-detail-summary").innerHTML = `
+    <span><b>停止原因</b> ${dayMeta.stopped_by}</span>
+    <span><b>当日盈亏</b> <em style="color:${pnlClr}">${fmtMoney(dayMeta.pnl)}</em></span>
+    <span><b>开奖期数</b> ${dayMeta.draws}</span>
+    <span><b>下注笔数</b> ${dayMeta.total_bets}</span>
+    <span><b>胜利</b> ${dayMeta.total_wins}</span>
+    <span><b>胜率</b> ${dayMeta.win_rate}%</span>
+    <span><b>触发次数</b> ${dayMeta.triggers}</span>
+  `;
+
+  if (!dayMeta.has_detail) {
+    document.getElementById("bets-count").textContent = dayMeta.total_bets;
+    document.getElementById("draws-count").textContent = dayMeta.draws;
+    document.getElementById("trig-count").textContent = dayMeta.triggers;
+    document.getElementById("day-detail-body").innerHTML = `
+      <div class="no-detail">
+        <p class="hint"><b>该日逐笔明细未保存。</b>仅最近 7 天保留完整开奖 + 逐笔下注流水（数据量太大无法全量上线，您看到的"当日汇总"是从全量回测数据中取的真实统计）。</p>
+        <p class="hint">最近 7 天可点开看明细的日期: ${DATA.daily.filter(d => d.has_detail).map(d => d.date).join(", ")}</p>
+      </div>`;
+    return;
+  }
+
+  // Has detail: load day file
+  document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载逐笔明细中…</p>`;
+  if (!dayCache[date]) {
     try {
-      const r = await fetch(`data/months/${ym}.json`);
-      if (!r.ok) {
-        document.getElementById("day-detail-body").innerHTML = `<p class="hint">该月明细未保存（仅最近 12 个月可点开查看，更早数据见图表/月度统计）</p>`;
-        return;
-      }
-      monthCache[ym] = await r.json();
+      const r = await fetch(`data/days/${date}.json`);
+      dayCache[date] = await r.json();
     } catch (e) {
       document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载失败: ${e.message}</p>`;
       return;
     }
   }
-  if (!monthCache[ym][date]) {
-    document.getElementById("day-detail-body").innerHTML = `<p class="hint">该日无数据</p>`;
-    return;
-  }
-  currentDay = monthCache[ym][date];
+  currentDay = dayCache[date];
 
-  // Summary
-  const d = currentDay;
-  const pnlClr = d.pnl >= 0 ? "#3fb950" : "#f85149";
-  document.getElementById("day-detail-summary").innerHTML = `
-    <span><b>停止原因</b> ${d.stopped_by}</span>
-    <span><b>当日盈亏</b> <em style="color:${pnlClr}">${fmtMoney(d.pnl)}</em></span>
-    <span><b>开奖期数</b> ${d.n_draws}</span>
-    <span><b>下注笔数</b> ${d.total_bets}</span>
-    <span><b>胜利</b> ${d.total_wins}</span>
-    <span><b>胜率</b> ${d.win_rate}%</span>
-    <span><b>触发次数</b> ${d.triggers.length}</span>
-  `;
-
-  // Tab counts
-  document.getElementById("bets-count").textContent = d.bets.length;
-  document.getElementById("draws-count").textContent = d.draws.length;
-  document.getElementById("trig-count").textContent = d.triggers.length;
+  document.getElementById("bets-count").textContent = currentDay.bets.length;
+  document.getElementById("draws-count").textContent = currentDay.draws.length;
+  document.getElementById("trig-count").textContent = currentDay.triggers.length;
 
   renderDayBody();
 }
