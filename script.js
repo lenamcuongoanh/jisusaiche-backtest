@@ -3,7 +3,7 @@ const fmt2 = n => (n >= 0 ? "+" : "") + n.toLocaleString("en-US", { minimumFract
 const fmtMoney = n => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 let DATA = null;
-let dayCache = {};
+let monthCache = {};
 let currentDay = null;
 let currentTab = "bets";
 
@@ -261,18 +261,23 @@ async function openDay(date) {
   detail.style.display = "block";
   detail.scrollIntoView({ behavior: "smooth", block: "start" });
   document.getElementById("day-detail-title").textContent = `📅 ${date} 全日明细`;
-  document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载中…</p>`;
+  document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载中… (按月加载, 首次约 4MB)</p>`;
 
-  if (!dayCache[date]) {
+  const ym = date.slice(0, 7);
+  if (!monthCache[ym]) {
     try {
-      const r = await fetch(`data/days/${date}.json`);
-      dayCache[date] = await r.json();
+      const r = await fetch(`data/months/${ym}.json`);
+      monthCache[ym] = await r.json();
     } catch (e) {
       document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载失败: ${e.message}</p>`;
       return;
     }
   }
-  currentDay = dayCache[date];
+  if (!monthCache[ym][date]) {
+    document.getElementById("day-detail-body").innerHTML = `<p class="hint">该日无数据</p>`;
+    return;
+  }
+  currentDay = monthCache[ym][date];
 
   // Summary
   const d = currentDay;
