@@ -267,6 +267,10 @@ async function openDay(date) {
   if (!monthCache[ym]) {
     try {
       const r = await fetch(`data/months/${ym}.json`);
+      if (!r.ok) {
+        document.getElementById("day-detail-body").innerHTML = `<p class="hint">该月明细未保存（仅最近 12 个月可点开查看，更早数据见图表/月度统计）</p>`;
+        return;
+      }
       monthCache[ym] = await r.json();
     } catch (e) {
       document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载失败: ${e.message}</p>`;
