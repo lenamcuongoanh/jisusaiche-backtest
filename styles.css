@@ -339,10 +339,137 @@ footer {
 }
 footer code { background: #21262d; padding: 1px 6px; border-radius: 3px; }
 
+.recent-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.recent-card {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.recent-card:hover {
+  border-color: #58a6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.15);
+}
+.rc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.rc-date { font-size: 13px; font-weight: 600; color: #e6edf3; }
+.rc-dow { color: #6e7681; font-weight: 400; margin-left: 4px; font-size: 11px; }
+.rc-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+.rc-badge.tp { background: rgba(63,185,80,0.15); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+.rc-badge.sl { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+.rc-badge.end { background: rgba(110,118,129,0.15); color: #8b949e; border: 1px solid rgba(110,118,129,0.3); }
+.rc-pnl {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 4px 0 8px;
+}
+.rc-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #8b949e;
+}
+.rc-stats b { color: #e6edf3; font-weight: 600; margin-right: 2px; }
+
+/* === 移动端响应式 === */
 @media (max-width: 768px) {
   header h1 { font-size: 22px; }
   .card { padding: 16px; }
   .chart-wrap { height: 260px; }
   #heatmap { grid-template-columns: repeat(20, 1fr); }
-  #grid-table { grid-template-columns: 60px repeat(7, 1fr); }
+  #grid-table { grid-template-columns: 60px repeat(7, 1fr); font-size: 10px; }
+  .gh, .gc { padding: 6px 2px; font-size: 10px; }
+
+  /* 列表整体: 单列卡片化 */
+  .trade-row.issue-row,
+  .trade-row.draw,
+  .trade-row.trigger,
+  .trade-row { font-size: 11px; }
+
+  /* 每期下注: 卡片化 */
+  .trade-row.issue-row,
+  .trade-row.issue-row.header { grid-template-columns: 1fr; gap: 6px; padding: 12px 10px; }
+  .trade-row.issue-row.header { display: none; }
+  .trade-row.issue-row::before {
+    content: "时间 / 期号 / 余额";
+    display: none;
+  }
+  .trade-row.issue-row > span:first-child {
+    font-weight: 600;
+    color: #58a6ff;
+  }
+  .trade-row.issue-row > span:nth-child(2) {
+    color: #8b949e;
+    font-size: 10px;
+  }
+  .trade-row.issue-row > span:last-child {
+    text-align: left;
+    color: #8b949e;
+    font-size: 11px;
+  }
+  .trade-row.issue-row > span:last-child::before {
+    content: "余额 ";
+    color: #6e7681;
+  }
+  .trade-row.issue-row .draw-nums { gap: 2px; }
+  .trade-row.issue-row .draw-nums .num {
+    width: 18px !important; height: 18px !important;
+    line-height: 18px !important; font-size: 10px;
+  }
+  .lane-bet-chip { font-size: 10px; padding: 2px 6px; }
+
+  /* 完整开奖: 横向滚动 */
+  .trade-row.draw-header,
+  .trade-row.draw {
+    grid-template-columns: 70px 100px repeat(10, 28px);
+    overflow-x: auto;
+    min-width: 100%;
+  }
+  .trade-list { overflow-x: auto; }
+  .trade-row.draw .num { width: 22px; height: 22px; line-height: 22px; font-size: 10px; }
+
+  /* 触发: 单列 */
+  .trade-row.trigger { grid-template-columns: 1fr 1fr 60px 40px; }
+
+  /* 当日汇总 chip 样式 */
+  .day-summary { gap: 8px 16px; font-size: 12px; padding: 10px 12px; }
+  .day-summary span { white-space: nowrap; }
+
+  /* 最近 7 天卡片 */
+  .recent-days { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .recent-card { padding: 10px; }
+  .rc-pnl { font-size: 18px; }
+  .rc-date { font-size: 12px; }
+  .rc-stats { font-size: 10px; gap: 6px; }
+
+  /* tab 滚动 */
+  .day-detail-tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .tab-btn { white-space: nowrap; padding: 6px 10px; font-size: 12px; }
+
+  /* K 线高度 */
+  #day-kline { height: 220px; }
+  .day-kline-wrap { padding: 10px; }
+}
+
+@media (max-width: 480px) {
+  .recent-days { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-value { font-size: 18px; }
 }

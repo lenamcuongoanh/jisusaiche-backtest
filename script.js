@@ -10,6 +10,7 @@ let currentTab = "bets";
 async function load() {
   const r = await fetch("data/results.json");
   DATA = await r.json();
+  renderRecentDays();
   renderKPI();
   renderEquity();
   renderYearPicker();
@@ -26,6 +27,37 @@ async function load() {
       renderDayBody();
     });
   });
+}
+
+function renderRecentDays() {
+  const container = document.getElementById("recent-days");
+  const detailDays = DATA.daily.filter(d => d.has_detail);
+  if (!detailDays.length) {
+    container.innerHTML = `<p class="hint">暂无可点开明细的天</p>`;
+    return;
+  }
+  // newest first
+  detailDays.sort((a, b) => b.date.localeCompare(a.date));
+  let html = "";
+  for (const d of detailDays) {
+    const pnlCls = d.pnl >= 0 ? "pos" : "neg";
+    const stopBadge = d.stopped_by === "止盈" ? "tp" : (d.stopped_by === "止损" ? "sl" : "end");
+    const wd = ["周日","周一","周二","周三","周四","周五","周六"][new Date(d.date).getDay()];
+    html += `<div class="recent-card" onclick="openDay('${d.date}')">
+      <div class="rc-head">
+        <span class="rc-date">${d.date} <span class="rc-dow">${wd}</span></span>
+        <span class="rc-badge ${stopBadge}">${d.stopped_by}</span>
+      </div>
+      <div class="rc-pnl ${pnlCls}">${d.pnl >= 0 ? "+" : ""}$${fmt(d.pnl)}</div>
+      <div class="rc-stats">
+        <span><b>${d.total_bets}</b> 注</span>
+        <span><b>${d.total_wins}</b> 中</span>
+        <span><b>${d.win_rate}%</b> 胜率</span>
+        <span><b>${d.triggers}</b> 触发</span>
+      </div>
+    </div>`;
+  }
+  container.innerHTML = html;
 }
 
 function renderKPI() {
