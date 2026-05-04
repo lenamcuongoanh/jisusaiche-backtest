@@ -339,6 +339,37 @@ footer {
 }
 footer code { background: #21262d; padding: 1px 6px; border-radius: 3px; }
 
+.strategy-picker {
+  background: linear-gradient(135deg, #161b22 0%, #1f2428 100%);
+  border-color: #58a6ff;
+}
+.strategy-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.strategy-row label { font-size: 14px; color: #e6edf3; }
+.strategy-row select {
+  background: #0d1117;
+  color: #f0f6fc;
+  border: 1px solid #30363d;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 240px;
+}
+.strategy-row select:hover { border-color: #58a6ff; }
+.strategy-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #8b949e;
+  line-height: 1.6;
+}
+
 .recent-days {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

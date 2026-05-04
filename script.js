@@ -6,10 +6,35 @@ let DATA = null;
 let dayCache = {};
 let currentDay = null;
 let currentTab = "bets";
+let STRATEGIES = null;
+let CURRENT_STRATEGY = null;
+let equityChart = null;
 
 async function load() {
-  const r = await fetch("data/results.json");
+  STRATEGIES = (await (await fetch("data/strategies.json")).json()).strategies;
+  // 默认 conservative (从 URL hash 或第一个)
+  const fromHash = location.hash.replace("#", "");
+  CURRENT_STRATEGY = STRATEGIES.find(s => s.id === fromHash) || STRATEGIES[0];
+
+  // 渲染选择器
+  const sel = document.getElementById("strategy-select");
+  sel.innerHTML = STRATEGIES.map(s => `<option value="${s.id}">${s.name} · ${s.label}</option>`).join("");
+  sel.value = CURRENT_STRATEGY.id;
+  sel.addEventListener("change", () => switchStrategy(sel.value));
+  document.getElementById("strategy-desc").textContent = CURRENT_STRATEGY.desc;
+
+  await loadStrategyData(CURRENT_STRATEGY.id);
+}
+
+async function loadStrategyData(id) {
+  const r = await fetch(`data/results_${id}.json`);
   DATA = await r.json();
+  dayCache = {};
+  closeDayDetail();
+  // 清空旧 DOM (重新渲染时复用容器)
+  document.querySelectorAll("#month-table tbody, #recent-days, #grid-table, #heatmap").forEach(el => el.innerHTML = "");
+  if (equityChart) { equityChart.destroy(); equityChart = null; }
+
   renderRecentDays();
   renderKPI();
   renderEquity();
@@ -68,6 +93,7 @@ function renderKPI() {
   document.getElementById("kpi-winrate").textContent = wpct + "%";
   document.getElementById("kpi-winsub").textContent = `${s.win_days} 盈 / ${s.loss_days} 亏 / ${s.total_days} 总`;
   document.getElementById("kpi-bust").textContent = s.bust_days;
+  document.getElementById("kpi-bust-sub").textContent = `已被 $${(CURRENT_STRATEGY.sl/1000)}K 止损接住`;
   document.getElementById("kpi-tpsl").textContent = `${s.tp_days} : ${s.sl_days}`;
   document.getElementById("kpi-tpsl-sub").textContent = `止盈 ${(s.tp_days/s.total_days*100).toFixed(0)}% · 止损 ${(s.sl_days/s.total_days*100).toFixed(0)}%`;
   document.getElementById("kpi-extreme").textContent = `$${fmt(s.min_pnl)} / $${fmt(s.max_pnl)}`;
@@ -90,7 +116,7 @@ function renderEquity() {
     labels.push(d.date);
     data.push(cum);
   }
-  new Chart(ctx, {
+  equityChart = new Chart(ctx, {
     type: "line",
     data: {
       labels,
@@ -281,7 +307,7 @@ function renderGrid() {
           : `rgba(248, 81, 73, ${alpha})`;
         div.textContent = "$" + fmt(v);
         div.title = `TP=$${tp}/SL=$${sl}: $${fmt(v)} 累计 / 胜率 ${cell.win_rate.toFixed(1)}%`;
-        if (tp === 3000 && sl === 5000) div.classList.add("best");
+        if (tp === CURRENT_STRATEGY.tp && sl === CURRENT_STRATEGY.sl) div.classList.add("best");
       }
       container.appendChild(div);
     }
@@ -329,7 +355,7 @@ async function openDay(date) {
   document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载逐笔明细中…</p>`;
   if (!dayCache[date]) {
     try {
-      const r = await fetch(`data/days/${date}.json`);
+      const r = await fetch(`data/days_${CURRENT_STRATEGY.id}/${date}.json`);
       dayCache[date] = await r.json();
     } catch (e) {
       document.getElementById("day-detail-body").innerHTML = `<p class="hint">加载失败: ${e.message}</p>`;
@@ -535,9 +561,18 @@ function renderDayBody() {
 }
 
 function closeDayDetail() {
-  document.getElementById("day-detail").style.display = "none";
-  document.getElementById("day-kline-wrap").style.display = "none";
+  const el = document.getElementById("day-detail");
+  if (el) el.style.display = "none";
+  const kl = document.getElementById("day-kline-wrap");
+  if (kl) kl.style.display = "none";
   currentDay = null;
+}
+
+async function switchStrategy(id) {
+  CURRENT_STRATEGY = STRATEGIES.find(s => s.id === id);
+  document.getElementById("strategy-desc").textContent = CURRENT_STRATEGY.desc;
+  location.hash = id;
+  await loadStrategyData(id);
 }
 
 window.openDay = openDay;

@@ -12,6 +12,14 @@
   <p class="subtitle">2023-01-01 → 2026-05-03 · 1,404,059 期真实数据 · 1,219 天 · 每日独立 $10,000 本金</p>
 </header>
 
+<section class="card strategy-picker">
+  <div class="strategy-row">
+    <label for="strategy-select"><b>选择策略:</b></label>
+    <select id="strategy-select"></select>
+  </div>
+  <p id="strategy-desc" class="strategy-desc"></p>
+</section>
+
 <section class="card">
   <h2>策略规则</h2>
   <ul class="rules">
@@ -38,7 +46,7 @@
     <div class="kpi"><div class="kpi-label">累计盈亏</div><div class="kpi-value pos" id="kpi-total"></div><div class="kpi-sub">每天独立 $10K 本金</div></div>
     <div class="kpi"><div class="kpi-label">日均盈亏</div><div class="kpi-value pos" id="kpi-avg"></div><div class="kpi-sub">本金的 0.30%/天</div></div>
     <div class="kpi"><div class="kpi-label">盈利天数</div><div class="kpi-value" id="kpi-winrate"></div><div class="kpi-sub" id="kpi-winsub"></div></div>
-    <div class="kpi"><div class="kpi-label">爆仓天数</div><div class="kpi-value pos" id="kpi-bust"></div><div class="kpi-sub">已被 $5K 止损接住</div></div>
+    <div class="kpi"><div class="kpi-label">爆仓天数</div><div class="kpi-value pos" id="kpi-bust"></div><div class="kpi-sub" id="kpi-bust-sub">已被止损接住</div></div>
     <div class="kpi"><div class="kpi-label">止盈/止损比</div><div class="kpi-value" id="kpi-tpsl"></div><div class="kpi-sub" id="kpi-tpsl-sub"></div></div>
     <div class="kpi"><div class="kpi-label">最差/最好单日</div><div class="kpi-value" id="kpi-extreme"></div><div class="kpi-sub">尾部全部被止损约束</div></div>
   </div>
