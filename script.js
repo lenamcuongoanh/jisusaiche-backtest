@@ -261,6 +261,7 @@ async function openDay(date) {
   detail.style.display = "block";
   detail.scrollIntoView({ behavior: "smooth", block: "start" });
   document.getElementById("day-detail-title").textContent = `📅 ${date} 当日汇总`;
+  document.getElementById("day-kline-wrap").style.display = "none";
 
   // Always show summary from results.json
   const dayMeta = DATA.daily.find(d => d.date === date);
@@ -305,11 +306,101 @@ async function openDay(date) {
   }
   currentDay = dayCache[date];
 
-  document.getElementById("bets-count").textContent = currentDay.bets.length;
+  // Group bets by issue (per-issue rendering)
+  const betsByIssue = {};
+  for (const b of currentDay.bets) {
+    const issue = b[0];
+    if (!betsByIssue[issue]) betsByIssue[issue] = [];
+    betsByIssue[issue].push(b);
+  }
+  currentDay._betsByIssue = betsByIssue;
+  currentDay._issueCount = Object.keys(betsByIssue).length;
+
+  document.getElementById("bets-count").textContent = currentDay._issueCount;
   document.getElementById("draws-count").textContent = currentDay.draws.length;
   document.getElementById("trig-count").textContent = currentDay.triggers.length;
 
+  renderKline();
   renderDayBody();
+}
+
+function renderKline() {
+  const wrap = document.getElementById("day-kline-wrap");
+  const container = document.getElementById("day-kline");
+  container.innerHTML = "";
+  wrap.style.display = "block";
+
+  if (!currentDay || !currentDay.bets.length) {
+    wrap.style.display = "none";
+    return;
+  }
+
+  // 按时间转 ts
+  const issueIdx = {};
+  for (const dr of currentDay.draws) issueIdx[dr[0]] = dr[1]; // issue → "HH:MM:SS"
+
+  // 每 30 分钟一根 K 线
+  const BUCKET = 30 * 60;
+  const buckets = {};
+  for (const b of currentDay.bets) {
+    const issue = b[0];
+    const t = issueIdx[issue] || "00:00:00";
+    const [hh, mm, ss] = t.split(":").map(Number);
+    const ts = hh * 3600 + mm * 60 + ss;
+    const bucket = Math.floor(ts / BUCKET) * BUCKET;
+    if (!buckets[bucket]) buckets[bucket] = [];
+    buckets[bucket].push(b[8] - 10000); // pnl after this bet
+  }
+
+  // Inject seed point at day-start (0 PnL) so first bucket isn't empty-open
+  const sortedBuckets = Object.keys(buckets).map(Number).sort((a, b) => a - b);
+  let prevClose = 0;
+  const candles = [];
+  for (const bk of sortedBuckets) {
+    const ps = buckets[bk];
+    const open = prevClose;
+    const close = ps[ps.length - 1];
+    const high = Math.max(open, ...ps);
+    const low = Math.min(open, ...ps);
+    candles.push({ time: bk, open, high, low, close });
+    prevClose = close;
+  }
+
+  const chart = LightweightCharts.createChart(container, {
+    layout: { background: { color: "#0d1117" }, textColor: "#8b949e" },
+    grid: { vertLines: { color: "#21262d" }, horzLines: { color: "#21262d" } },
+    timeScale: {
+      timeVisible: true,
+      secondsVisible: false,
+      borderColor: "#30363d",
+      tickMarkFormatter: (ts) => {
+        const h = Math.floor(ts / 3600);
+        const m = Math.floor((ts % 3600) / 60);
+        return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+      },
+    },
+    rightPriceScale: { borderColor: "#30363d" },
+    crosshair: { mode: 0 },
+    height: 280,
+    localization: {
+      timeFormatter: (ts) => {
+        const h = Math.floor(ts / 3600);
+        const m = Math.floor((ts % 3600) / 60);
+        return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+      },
+      priceFormatter: (v) => (v >= 0 ? "+" : "") + "$" + Math.round(v).toLocaleString(),
+    },
+  });
+  const series = chart.addCandlestickSeries({
+    upColor: "#3fb950",
+    downColor: "#f85149",
+    borderUpColor: "#3fb950",
+    borderDownColor: "#f85149",
+    wickUpColor: "#3fb950",
+    wickDownColor: "#f85149",
+  });
+  series.setData(candles);
+  chart.timeScale().fitContent();
 }
 
 function renderDayBody() {
@@ -322,31 +413,51 @@ function renderDayBody() {
   for (const dr of d.draws) issueIdx[dr[0]] = dr;
 
   if (currentTab === "bets") {
-    if (!d.bets.length) {
+    const groups = d._betsByIssue || {};
+    const issues = Object.keys(groups).map(Number).sort((a, b) => a - b);
+    if (!issues.length) {
       body.innerHTML = `<p class="hint">本日无下注 (10 车道全程未触发同号 2 期)</p>`;
       return;
     }
+    // draws issue → row
+    const drawByIssue = {};
+    for (const dr of d.draws) drawByIssue[dr[0]] = dr;
+
     let html = `<div class="trade-list">
-      <div class="trade-row header">
-        <span>时间</span><span>期号</span><span>车道</span><span>追号</span>
-        <span>开出</span><span>注码</span><span>第N期</span><span>结果</span><span>盈亏</span><span>余额</span>
+      <div class="trade-row issue-row header">
+        <span>时间</span><span>期号</span><span>开奖 (1→10)</span>
+        <span>本期下注 (车道-押号 注码)</span><span>余额</span>
       </div>`;
-    for (const b of d.bets) {
-      const [issue, lane, tgt, actual, bet, round, win, delta, bal] = b;
-      const tt = issueIdx[issue] ? issueIdx[issue][1] : "";
-      const cls = win ? "win" : "lose";
-      const hit = actual === tgt;
-      html += `<div class="trade-row ${cls}">
-        <span>${tt}</span>
+    for (const issue of issues) {
+      const bets = groups[issue];
+      const draw = drawByIssue[issue]; // [issue, t, n01..n10]
+      const t = draw ? draw[1] : "";
+      const nums = draw ? draw.slice(2) : [];
+      const lastBal = bets[bets.length - 1][8];
+
+      const numsHtml = nums.map((n, i) => {
+        // highlight a num if any bet in this issue had lane=i+1 and actual=n (that is the cell that decides win/lose for this lane)
+        const matched = bets.some(b => b[1] === i + 1 && b[3] === n && b[2] === n);
+        return `<span class="num ${matched ? 'hit' : ''}" style="width:20px;height:20px;line-height:20px;font-size:11px">${n}</span>`;
+      }).join("");
+
+      const chips = bets.map(b => {
+        const [_issue, lane, tgt, actual, bet, round, win, delta, bal] = b;
+        const cls = win ? "win" : "lose";
+        const sign = win ? "✅" : "❌";
+        return `<span class="lane-bet-chip ${cls}" title="第${round}期追号">
+          <span class="ln">第${lane}道</span>→<span class="tn">${tgt}</span>
+          <span class="am">$${bet}</span>
+          ${sign}${win ? `<span class="pos">+${fmtMoney(delta)}</span>` : ``}
+        </span>`;
+      }).join("");
+
+      html += `<div class="trade-row issue-row">
+        <span>${t}</span>
         <span>${issue}</span>
-        <span>第${lane}名</span>
-        <span class="num">${tgt}</span>
-        <span class="num ${hit ? 'hit' : ''}">${actual}</span>
-        <span>$${bet}</span>
-        <span>R${round}</span>
-        <span>${win ? "✅ 中" : "❌ 未中"}</span>
-        <span class="${win ? 'pos' : 'neg'}">${win ? "+" : ""}${fmtMoney(delta)}</span>
-        <span>${fmtMoney(bal)}</span>
+        <div class="draw-nums">${numsHtml}</div>
+        <div class="lane-bets">${chips}</div>
+        <span>${fmtMoney(lastBal)}</span>
       </div>`;
     }
     html += `</div>`;
@@ -393,6 +504,7 @@ function renderDayBody() {
 
 function closeDayDetail() {
   document.getElementById("day-detail").style.display = "none";
+  document.getElementById("day-kline-wrap").style.display = "none";
   currentDay = null;
 }
 
