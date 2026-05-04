@@ -66,7 +66,10 @@ function renderRecentDays() {
   let html = "";
   for (const d of detailDays) {
     const pnlCls = d.pnl >= 0 ? "pos" : "neg";
-    const stopBadge = d.stopped_by === "止盈" ? "tp" : (d.stopped_by === "止损" ? "sl" : "end");
+    let stopBadge = "end";
+    if (d.stopped_by === "止盈") stopBadge = "tp";
+    else if (d.stopped_by === "止损") stopBadge = "sl";
+    else if (d.stopped_by === "爆仓" || d.stopped_by === "爆仓后跑完" || d.stopped_by === "单条爆仓·全砍") stopBadge = "sl";
     const wd = ["周日","周一","周二","周三","周四","周五","周六"][new Date(d.date).getDay()];
     html += `<div class="recent-card" onclick="openDay('${d.date}')">
       <div class="rc-head">
@@ -93,7 +96,8 @@ function renderKPI() {
   document.getElementById("kpi-winrate").textContent = wpct + "%";
   document.getElementById("kpi-winsub").textContent = `${s.win_days} 盈 / ${s.loss_days} 亏 / ${s.total_days} 总`;
   document.getElementById("kpi-bust").textContent = s.bust_days;
-  document.getElementById("kpi-bust-sub").textContent = `已被 $${(CURRENT_STRATEGY.sl/1000)}K 止损接住`;
+  const slLabel = CURRENT_STRATEGY.sl >= 999999 ? "爆仓信号" : `$${(CURRENT_STRATEGY.sl/1000)}K 止损`;
+  document.getElementById("kpi-bust-sub").textContent = `保护机制: ${slLabel}`;
   document.getElementById("kpi-tpsl").textContent = `${s.tp_days} : ${s.sl_days}`;
   document.getElementById("kpi-tpsl-sub").textContent = `止盈 ${(s.tp_days/s.total_days*100).toFixed(0)}% · 止损 ${(s.sl_days/s.total_days*100).toFixed(0)}%`;
   document.getElementById("kpi-extreme").textContent = `$${fmt(s.min_pnl)} / $${fmt(s.max_pnl)}`;
@@ -212,7 +216,7 @@ function renderHeatmap() {
       if (d) {
         if (d.stopped_by === "止盈") cls = "cell tp";
         else if (d.stopped_by === "止损") cls = "cell sl";
-        else if (d.stopped_by === "爆仓") cls = "cell sl-mid";
+        else if (d.stopped_by === "爆仓" || d.stopped_by === "爆仓后跑完" || d.stopped_by === "单条爆仓·全砍") cls = "cell sl-mid";
         else cls = "cell end";
         title = `${ds} · ${d.stopped_by} · $${fmt2(d.pnl)} · ${d.total_bets} 注 · 胜率 ${d.win_rate}%`;
       }
@@ -249,7 +253,7 @@ function renderMonthly() {
     m.pnl += d.pnl;
     if (d.pnl > 0) m.wins++;
     if (d.stopped_by === "止盈") m.tp++;
-    if (d.stopped_by === "止损") m.sl++;
+    if (d.stopped_by === "止损" || d.stopped_by === "爆仓" || d.stopped_by === "爆仓后跑完" || d.stopped_by === "单条爆仓·全砍") m.sl++;
   }
   const months = Object.keys(byMonth).sort();
   for (const ym of months) {
