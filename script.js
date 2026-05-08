@@ -32,7 +32,7 @@ async function loadStrategyData(id) {
   dayCache = {};
   closeDayDetail();
   // 清空旧 DOM (重新渲染时复用容器)
-  document.querySelectorAll("#month-table tbody, #recent-days, #grid-table, #heatmap").forEach(el => el.innerHTML = "");
+  document.querySelectorAll("#month-table tbody, #recent-days, #grid-table, #heatmap, #full-calendar").forEach(el => el.innerHTML = "");
   if (equityChart) { equityChart.destroy(); equityChart = null; }
 
   renderRecentDays();
@@ -40,6 +40,7 @@ async function loadStrategyData(id) {
   renderEquity();
   renderYearPicker();
   renderHeatmap();
+  renderFullCalendar();
   renderMonthly();
   renderGrid();
 
@@ -239,6 +240,113 @@ function renderHeatmap() {
       }
       container.appendChild(div);
     }
+  }
+}
+
+const MONTH_LABELS = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+const DOW_LABELS = ["日", "一", "二", "三", "四", "五", "六"];
+
+function pnlColor(pnl) {
+  if (pnl === 0) return "transparent";
+  // 极速赛车日 PnL 多在 -$10K ~ +$3.5K 区间
+  const max = pnl >= 0 ? 3500 : 10000;
+  const intensity = Math.min(1, Math.abs(pnl) / max);
+  const alpha = 0.18 + intensity * 0.72;
+  return pnl >= 0
+    ? `rgba(63, 185, 80, ${alpha})`
+    : `rgba(248, 81, 73, ${alpha})`;
+}
+
+function renderFullCalendar() {
+  const container = document.getElementById("full-calendar");
+  container.innerHTML = "";
+
+  // 按 YYYY-MM 分组
+  const byMonth = {};
+  for (const d of DATA.daily) {
+    const ym = d.date.slice(0, 7);
+    if (!byMonth[ym]) byMonth[ym] = [];
+    byMonth[ym].push(d);
+  }
+
+  // 跳转选项
+  const jump = document.getElementById("cal-jump");
+  if (jump) {
+    jump.innerHTML = Object.keys(byMonth).sort().map(ym => {
+      const sum = byMonth[ym].reduce((a, b) => a + b.pnl, 0);
+      const cls = sum >= 0 ? "+" : "";
+      return `<option value="${ym}">${ym} (${cls}$${Math.round(sum).toLocaleString()})</option>`;
+    }).join("");
+    jump.onchange = () => {
+      const target = document.getElementById(`cal-month-${jump.value}`);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+  }
+
+  for (const ym of Object.keys(byMonth).sort()) {
+    const days = byMonth[ym];
+    const sum = days.reduce((a, b) => a + b.pnl, 0);
+    const wins = days.filter(d => d.pnl > 0).length;
+    const block = document.createElement("div");
+    block.className = "cal-month";
+    block.id = `cal-month-${ym}`;
+
+    const [y, m] = ym.split("-").map(Number);
+    const monthLabel = `${y}年 ${MONTH_LABELS[m - 1]}`;
+    const sumCls = sum >= 0 ? "pos" : "neg";
+
+    block.innerHTML = `
+      <div class="cal-month-header">
+        <span class="cal-month-title">${monthLabel}</span>
+        <span class="cal-month-stats">
+          <span class="${sumCls}">${sum >= 0 ? "+" : ""}$${Math.round(sum).toLocaleString()}</span>
+          <span class="hint">· ${days.length}天 · 胜率 ${Math.round(wins/days.length*100)}%</span>
+        </span>
+      </div>
+      <div class="cal-grid">
+        ${DOW_LABELS.map(l => `<div class="cal-dow">${l}</div>`).join("")}
+      </div>
+    `;
+    const grid = block.querySelector(".cal-grid");
+
+    // 该月第一天的星期
+    const firstDayOfMonth = new Date(`${ym}-01`).getDay();
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      const empty = document.createElement("div");
+      empty.className = "cal-cell empty";
+      grid.appendChild(empty);
+    }
+
+    const byDate = {};
+    for (const d of days) byDate[d.date] = d;
+
+    // 该月天数
+    const lastDay = new Date(y, m, 0).getDate();
+    for (let dd = 1; dd <= lastDay; dd++) {
+      const ds = `${ym}-${String(dd).padStart(2, "0")}`;
+      const d = byDate[ds];
+      const cell = document.createElement("div");
+      if (!d) {
+        cell.className = "cal-cell empty";
+        grid.appendChild(cell);
+        continue;
+      }
+      cell.className = "cal-cell";
+      cell.style.background = pnlColor(d.pnl);
+      const sign = d.pnl >= 0 ? "+" : "";
+      const pnlText = Math.abs(d.pnl) >= 1000
+        ? `${sign}$${(d.pnl / 1000).toFixed(1)}K`
+        : `${sign}$${Math.round(d.pnl)}`;
+      cell.innerHTML = `
+        <span class="cal-day">${dd}</span>
+        <span class="cal-pnl ${d.pnl >= 0 ? 'pos' : 'neg'}">${pnlText}</span>
+      `;
+      cell.title = `${d.date} · ${d.stopped_by} · $${d.pnl.toFixed(2)} · ${d.total_bets} 注 / ${d.total_wins} 中`;
+      cell.addEventListener("click", () => openDay(ds));
+      grid.appendChild(cell);
+    }
+
+    container.appendChild(block);
   }
 }
 

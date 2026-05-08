@@ -59,12 +59,22 @@
 </section>
 
 <section class="card">
-  <h2>每日盈亏热力图</h2>
-  <p class="hint">绿=止盈 +$3,000 · 红=止损 -$5,000 · 灰=日终自然停止。<b>点击任一天查看当日汇总</b>（最近 7 天还可看完整开奖 + 逐笔下注 + 触发记录）。</p>
+  <h2>每日盈亏热力图 (1,219 天紧凑视图)</h2>
+  <p class="hint">绿=止盈 · 红=止损 · 灰=日终自然停止。鼠标悬停看金额，点击查看当日汇总（最近 7 天还可看完整开奖 + 逐笔下注）。</p>
   <div class="year-picker-wrap" id="year-picker-wrap">
     <label>年份: <select id="year-select"></select></label>
   </div>
   <div id="heatmap"></div>
+</section>
+
+<section class="card">
+  <h2>📅 每日盈亏全表 (1,219 天明细)</h2>
+  <p class="hint">按月分块，每格直接显示当日盈亏金额。点击任一天查看汇总。</p>
+  <div class="cal-controls">
+    <label>跳转: <select id="cal-jump"></select></label>
+    <span class="hint">↓ 当月小计显示在每月右上</span>
+  </div>
+  <div id="full-calendar"></div>
 </section>
 
 <section class="card" id="day-detail" style="display:none">

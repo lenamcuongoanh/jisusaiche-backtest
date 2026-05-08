@@ -375,6 +375,91 @@ footer code { background: #21262d; padding: 1px 6px; border-radius: 3px; }
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
 }
+
+.cal-controls {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #8b949e;
+}
+.cal-controls select {
+  background: #0d1117;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-size: 12px;
+  max-width: 180px;
+}
+#full-calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 720px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scroll-behavior: smooth;
+}
+.cal-month {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.cal-month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.cal-month-title { font-weight: 600; color: #f0f6fc; }
+.cal-month-stats { font-size: 13px; font-weight: 600; }
+.cal-month-stats .hint { font-weight: 400; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.cal-dow {
+  text-align: center;
+  font-size: 10px;
+  color: #6e7681;
+  padding: 2px 0;
+  font-weight: 600;
+}
+.cal-cell {
+  aspect-ratio: 1.3;
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 4px;
+  padding: 4px 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 10px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.cal-cell:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px #58a6ff;
+  z-index: 2;
+}
+.cal-cell.empty {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+}
+.cal-cell.empty:hover { transform: none; box-shadow: none; }
+.cal-day { color: #8b949e; font-size: 9px; }
+.cal-pnl { font-weight: 700; font-size: 11px; line-height: 1.1; }
+.cal-pnl.pos { color: #3fb950; }
+.cal-pnl.neg { color: #f85149; }
 .recent-card {
   background: #0d1117;
   border: 1px solid #30363d;
@@ -482,6 +567,13 @@ footer code { background: #21262d; padding: 1px 6px; border-radius: 3px; }
   /* 当日汇总 chip 样式 */
   .day-summary { gap: 8px 16px; font-size: 12px; padding: 10px 12px; }
   .day-summary span { white-space: nowrap; }
+
+  /* 全量日历 */
+  .cal-cell { padding: 3px 2px; aspect-ratio: 1.1; }
+  .cal-day { font-size: 8px; }
+  .cal-pnl { font-size: 9px; }
+  .cal-grid { gap: 2px; }
+  #full-calendar { max-height: 540px; }
 
   /* 最近 7 天卡片 */
   .recent-days { grid-template-columns: repeat(2, 1fr); gap: 8px; }
