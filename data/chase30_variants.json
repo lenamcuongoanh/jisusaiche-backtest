@@ -1,0 +1,47 @@
+[
+  {
+    "strategy": "fixed",
+    "final_pnl": -30877.3,
+    "peak": 20305.88,
+    "trough": -82884.7,
+    "max_drawdown": 103190.58,
+    "total_chases": 162176,
+    "total_wins": 3684993,
+    "total_busts": 162167,
+    "win_rate_pct": 2272.22,
+    "bust_rate_pct": 99.99,
+    "max_base": 1,
+    "max_single_round_bet": 1,
+    "ending_base": 1
+  },
+  {
+    "strategy": "dalembert",
+    "final_pnl": -26571.2,
+    "peak": 25500.28,
+    "trough": -78393.78,
+    "max_drawdown": 103894.06,
+    "total_chases": 162176,
+    "total_wins": 3684993,
+    "total_busts": 162167,
+    "win_rate_pct": 2272.22,
+    "bust_rate_pct": 99.99,
+    "max_base": 6,
+    "max_single_round_bet": 6,
+    "ending_base": 1
+  },
+  {
+    "strategy": "martingale",
+    "final_pnl": -12883.76,
+    "peak": 33140.98,
+    "trough": -65307.16,
+    "max_drawdown": 98448.14,
+    "total_chases": 162176,
+    "total_wins": 3684993,
+    "total_busts": 162167,
+    "win_rate_pct": 2272.22,
+    "bust_rate_pct": 99.99,
+    "max_base": 243,
+    "max_single_round_bet": 243,
+    "ending_base": 1
+  }
+]

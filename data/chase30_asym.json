@@ -1,0 +1,74 @@
+[
+  {
+    "N_wins_to_decrease": 7,
+    "final_pnl": -87498.7,
+    "peak": 17342.42,
+    "trough": -178921.72,
+    "max_drawdown": 196264.14,
+    "total_chases": 162176,
+    "total_busts": 162167,
+    "total_wins": 3684993,
+    "max_base": 12,
+    "ending_base": 2,
+    "base_distribution_top": {
+      "1": 2412834,
+      "2": 877629,
+      "3": 331702,
+      "4": 127229,
+      "5": 47989,
+      "6": 17425,
+      "7": 6132,
+      "8": 2369,
+      "9": 756,
+      "10": 254
+    }
+  },
+  {
+    "N_wins_to_decrease": 8,
+    "final_pnl": -60557.02,
+    "peak": 20368.38,
+    "trough": -158341.68,
+    "max_drawdown": 178710.06,
+    "total_chases": 162176,
+    "total_busts": 162167,
+    "total_wins": 3684993,
+    "max_base": 13,
+    "ending_base": 2,
+    "base_distribution_top": {
+      "1": 2186556,
+      "2": 925703,
+      "3": 404356,
+      "4": 176883,
+      "5": 76600,
+      "6": 32457,
+      "7": 13149,
+      "8": 5365,
+      "9": 2077,
+      "10": 860
+    }
+  },
+  {
+    "N_wins_to_decrease": 9,
+    "final_pnl": -61856.46,
+    "peak": 26672.72,
+    "trough": -162498.42,
+    "max_drawdown": 189171.14,
+    "total_chases": 162176,
+    "total_busts": 162167,
+    "total_wins": 3684993,
+    "max_base": 19,
+    "ending_base": 3,
+    "base_distribution_top": {
+      "1": 1953852,
+      "2": 947981,
+      "3": 471071,
+      "4": 233873,
+      "5": 114083,
+      "6": 54822,
+      "7": 26340,
+      "8": 12356,
+      "9": 5295,
+      "10": 2420
+    }
+  }
+]

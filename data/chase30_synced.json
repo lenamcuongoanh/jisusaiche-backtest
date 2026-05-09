@@ -1,0 +1,50 @@
+[
+  {
+    "strategy": "fixed_1",
+    "final_pnl": -27074.86,
+    "peak": 3007.54,
+    "trough": -34187.74,
+    "max_drawdown": 37195.28,
+    "total_chases": 162176,
+    "total_wins": 3684993,
+    "total_busts": 162167,
+    "max_X": 1,
+    "ending_X": 1,
+    "parallel_distribution_top": {
+      "0": 2,
+      "2": 1,
+      "3": 4,
+      "4": 1,
+      "5": 146,
+      "6": 1870,
+      "7": 25550,
+      "8": 215342,
+      "9": 1087316,
+      "10": 2494174
+    }
+  },
+  {
+    "strategy": "global_dalembert",
+    "final_pnl": -24014.58,
+    "peak": 5299.42,
+    "trough": -29421.24,
+    "max_drawdown": 34720.66,
+    "total_chases": 162176,
+    "total_wins": 3684993,
+    "total_busts": 162167,
+    "max_X": 6,
+    "ending_X": 1,
+    "parallel_distribution_top": {
+      "0": 2,
+      "2": 1,
+      "3": 4,
+      "4": 1,
+      "5": 146,
+      "6": 1870,
+      "7": 25550,
+      "8": 215342,
+      "9": 1087316,
+      "10": 2494174
+    }
+  }
+]
